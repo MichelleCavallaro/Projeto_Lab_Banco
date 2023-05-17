@@ -1,30 +1,42 @@
 const express = require('express');
 const app = express();
-const User = require('./models/User');
+const connection = require('./database/database');
 
+// Models
+const Usuario = require('./models/usuario');
+const Tipo = require('./models/tipo');
+const Musica = require('./models/musica');
+
+// Routes import
+const usuarioRoute = require('./routes/usuarioRoutes');
+
+// Forms Parser
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-app.get('/', async (req, res) => {
-  res.send('pagina inicial');
+// Database
+connection
+   .authenticate()
+   .then(() => {
+    console.log("Conexão feita com sucesso!");
+   });
+
+// Access from other origin
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  );
+  res.setHeader (
+    'Access-Control-Allow-Methods',
+    'GET, POST, PATCH, PUT, DELETE, OPTIONS'
+  );
+  next();
 });
 
-app.post('/cadastrar', async (req, res) => {
-  await User.create(req.body)
-    .then(() => {
-      return res.json({
-        erro: false,
-        mensagem: 'usuario cadastrado com sucesso',
-      });
-    })
-    .catch((error) => {
-      console.log(error);
-      return res.status(400).json({
-        erro: true,
-        mensagem: 'erro: usuario não cadastrado com sucesso',
-      });
-    });
-});
+// Routes
+app.use('/api/usuario', usuarioRoute);
 
-app.listen(8080, () => {
-  console.log('servidor iniciado na porta 8080: http://localhost:8080');
-});
+
+module.exports = app;
